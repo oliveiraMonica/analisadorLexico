@@ -1,0 +1,11 @@
+programa WhileSimples {
+    vars : Int x, Int i;
+    i = 1; 
+    x = 3;
+    enquanto(x < 10){
+        x = x * i ;
+        i = i + 2;
+    }
+    escreva(x);
+    escreva('\n');
+}

@@ -1,0 +1,32 @@
+-- Exemplo 3
+
+Int fibonacci(Int n){
+
+--funcao para calcular n-esimo termo de fibonacci
+	vars: Int aux, Int aux2, Int fib, Int indice;
+	aux=0;
+	aux2=1;
+	indice=3;
+	
+	se(n==1){
+		fib=0;
+	} senao{
+		se(n==2){
+			fib=1;
+		} senao{
+			enquanto(indice<n){
+				fib=aux+aux2;
+				aux=aux2;
+				aux2=fib;
+				indice = indice+1;
+			}
+		}
+	}
+	retorne fib;
+}
+programa Ex3{
+	vars: Int n, Int result;	
+	leia(n);
+	resposta = fibonacci(n);	
+	escreva(result); 	
+}

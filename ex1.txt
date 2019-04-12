@@ -1,0 +1,20 @@
+-- Exemplo 1
+Int soma (Int a ,Int b) {
+	retorne a+b;
+
+{-
+comentario
+em 
+multiplas
+linhas
+-}
+
+}
+
+programa Ex1{
+	vars: Int a, Int b, Int result;
+	leia(a);
+	leia(b);
+	total=soma(a,b);
+	escreva(result);
+}

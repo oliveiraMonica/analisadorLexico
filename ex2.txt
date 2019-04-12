@@ -1,0 +1,23 @@
+-- Exemplo 2
+
+Int fatorial (Int n){
+	
+	vars: Int fat;
+	fat =1;
+
+	enquanto(x > 0){
+		fat = fat * n;
+		n = n -1;
+	}
+	retorne fat;
+
+
+}
+programa Ex2{
+	vars: Int n,Int result;
+	leia(n);
+	fat= fatorial(n);
+	escreva(result);
+}
+
+

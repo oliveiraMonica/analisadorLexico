@@ -1,0 +1,134 @@
+%import "nodes.*";
+%import "nodes.expr.*";
+%import "nodes.cexpr.*";
+%import "nodes.cmd.*";
+%import "nodes.type.*";
+%import "nodes.body.*";
+
+%class "ScalcParser";
+
+%terminals NUMBER, AND, MULT, DIV, MOD, PLUS, MINUS, ID,
+           TRUE, FALSE, OR, LESS, HIGHER, EQUAL, LPAREN,
+           CHAR, RPAREN, VIRG,  WHILE, IF, ELSE, LBRACE, 
+           RBRACE, SEMI, INSTANCIE, WRITE, READ, ATTR, 
+           RETURN, BOOL, CHARACTER, TYID, INTEGER, LBRACK, 
+           RBRACK, VARS, COLON, REGISTRO, PROGRAMA, DOT;
+
+%left RPAREN;
+%left AND, MULT, DIV, MOD;
+%left PLUS, MINUS, OR;
+%nonassoc EQUAL, LESS, HIGHER;
+
+%typeof NUMBER = "Number";
+%typeof ID = "String";
+%typeof CHAR = "String";
+%typeof TYID = "String";
+
+%typeof expr, cexpr, variable, indexes = "Expr";
+%typeof type, varDec, varsSection, recordDec, declList, decl, functionDec = "Type";
+%typeof block, cmd, singlecmd, body, stmt, program = "Cmd";
+
+%goal program;
+
+program = declList.d PROGRAMA TYID.i body.b                   {: return new Program (d,i,b);  :}
+        ;
+
+declList = decl.c declList.d                                  {: return new DeclList(c,d);    :}
+           |
+           ; 
+
+decl = functionDec.f                                          {: return f; :}
+     | recordDec.r                                            {: return r; :}
+     ;
+
+recordDec = REGISTRO TYID.t LBRACE varDecList.v RBRACE        {: return new VarDecList(t, v); :} 
+          ;
+
+functionDec = type.t ID.id LPAREN RPAREN body.b               {: return new FunctionDec (t,id,b);  :}
+            | type.t ID.id LPAREN varDecList.v RPAREN body.b  {: return new FunctionDec(t,id,v,b); :}
+            ;
+
+body = LBRACE varsSection.v commandList.c RBRACE              {: return new Body(v,c);  :}
+     ;
+
+varsSection = VARS COLON varDecList.v SEMI                    {: return new VarsSec(v); :}
+              |
+              ;
+
+varDecList = varDec
+             | varDecList VIRG varDec
+             ;
+
+varDec = type.t ID.i                                          {: return new VarDec(t, i);   :}
+       ;
+
+block = LBRACE commandList.c RBRACE                           {: return new CommandList(c); :}
+       ;
+
+commandList = cmd
+            | commandList cmd            
+            ;
+
+cmd = stmt.s                                                  {: return s;          :}
+    | singlecmd.c SEMI                                        {: return c;          :}
+    ;
+
+singlecmd = INSTANCIE variable.v cexpr.c                      {: return new Instancie (v,c); :}
+           | WRITE LPAREN cexpr.c RPAREN                      {: return new Write(c);        :}
+           | READ LPAREN variable.v RPAREN                    {: return new Read(v);         :}
+           | variable.v ATTR cexpr.c                          {: return new Attr(v,c);       :}
+           | ID.id LPAREN paramList.p RPAREN                  {: return new IdParam(id,p);   :}
+           | ID.id LPAREN RPAREN                              {: return new VarParen(id);    :}   
+           | RETURN cexpr.c                                   {: return new Return(c);       :} 
+           ;
+
+stmt = WHILE LPAREN cexpr.c RPAREN block.b                    {: return new While(c,b);    :}
+     | IF LPAREN cexpr.c RPAREN block.b                       {: return new If(c,b);       :}
+     | IF LPAREN cexpr.a RPAREN block.b ELSE block.c          {: return new IfElse(a,b,c); :}
+     ;
+
+cexpr = cexpr.a AND cexpr.b                                   {: return new And(a,b);                :}
+      | cexpr.a OR cexpr.b                                    {: return new Or(a,b);                 :}
+      | expr.a EQUAL expr.b                                   {: return new Equal(a,b);              :}
+      | expr.a LESS expr.b                                    {: return new Less(a,b);               :}
+      | expr.a HIGHER expr.b                                  {: return new Higher(a,b);             :}
+      | expr.e                                                {: return e;                           :}
+      ;
+
+
+expr = expr.a MULT  expr.b                                    {: return new Mult(a,b);               :}
+     | expr.a DIV expr.b                                      {: return new Div(a,b);                :}
+     | expr.a MOD expr.b                                      {: return new Mod(a,b);                :}
+     | expr.a PLUS  expr.b                                    {: return new Add(a, b);               :}
+     | expr.a MINUS expr.b                                    {: return new Sub(a, b);               :}
+     | LPAREN cexpr.e RPAREN                                  {: return e;                           :}
+     | ID.id LPAREN paramList.p RPAREN                        {: return new ParamList(id, p);        :}
+     | ID.id LPAREN RPAREN                                    {: return new VarParen(id);            :}
+     | TRUE                                                   {: return new BoolTrue();              :}
+     | FALSE                                                  {: return new BoolFalse();             :}
+     | NUMBER.n                                               {: return new LitInt(n.doubleValue()); :}
+     | CHAR.c                                                 {: return new Varc(c);                 :}
+     | ID.i                                                   {: return new Var(i);                  :}
+     ;
+
+variable = ID.id indexes.e DOT variable.v                     {: return new Variable(id,e, v);       :}
+         | ID.id indexes.e                                    {: return new Variable(id,e, null);    :}
+         | NUMBER.n                                           {: return new LitInt(n.doubleValue()); :}
+         //| CHAR.c                                           {: return new Varc(c);                 :}
+         //| expr.a MULT  expr.b                              {: return new Mult(a,b);               :}
+         ;
+
+indexes = indexes.i LBRACK expr.e RBRACK                      {: return new Index(i, e);  :}
+        |
+        ;
+
+type = BOOL                                                   {: return new Bool();       :}
+      | CHARACTER                                             {: return new Char();       :}
+      | TYID.t                                                {: return new TyID(t);      :}
+      | INTEGER                                               {: return new Int();        :}
+      | type.t LBRACK RBRACK                                  {: return new ArrayType(t); :}
+      ;
+
+paramList = variable
+         | paramList VIRG variable
+         ;
